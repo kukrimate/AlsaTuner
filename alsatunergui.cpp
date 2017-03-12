@@ -7,9 +7,10 @@
 #include <QHBoxLayout>
 
 #include <QLabel>
-#include <QSlider>
-#include <QComboBox>
-#include <QCheckBox>
+
+SelectorSlider::SelectorSlider() : QSlider() {}
+SelectorComboBox::SelectorComboBox() : QComboBox() {}
+SelectorCheckBox::SelectorCheckBox() : QCheckBox() {}
 
 AlsaTunerGUI::AlsaTunerGUI(QWidget *parent) :
     QMainWindow(parent),
@@ -54,11 +55,11 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
         QLabel *label;
 
         QHBoxLayout *sliderLayout;
-        QSlider *slider;
+        SelectorSlider *slider;
 
-        QComboBox *selector;
+        SelectorComboBox *selector;
 
-        QCheckBox *flag;
+        SelectorCheckBox *flag;
 
         currentControl = new QVBoxLayout();
         switch (newCard.controls[i].type) {
@@ -69,7 +70,14 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
 
             sliderLayout = new QHBoxLayout();
             for (int j = 0; j < newCard.controls[i].slider.values.length(); ++j) {
-                slider = new QSlider();
+                slider = new SelectorSlider();
+
+                // Store the ALSA metadata for later usage
+                slider->cardIndex = newIndex;
+                slider->controlIndex = i;
+                slider->valueIndex = j;
+
+                connect(slider, SIGNAL(sliderMoved(int)), this, SLOT(sliderValueChanged(int)));
                 slider->setMinimum(newCard.controls[i].slider.min);
                 slider->setMaximum(newCard.controls[i].slider.max);
                 slider->setValue(newCard.controls[i].slider.values[j]);
@@ -83,14 +91,26 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
             label->setText(newCard.controls[i].label);
             currentControl->addWidget(label);
 
-            selector = new QComboBox();
+            selector = new SelectorComboBox();
+
+            // Store the ALSA metadata for later usage
+            selector->cardIndex = newIndex;
+            selector->controlIndex = i;
+
+            connect(selector, SIGNAL(currentIndexChanged(int)), this, SLOT(selectorSelectionChanged(int)));
             selector->addItems(newCard.controls[i].selector.options);
             selector->setCurrentIndex(newCard.controls[i].selector.selectedIndex);
             currentControl->addWidget(selector);
 
             break;
         case FLAG:
-            flag = new QCheckBox();
+            flag = new SelectorCheckBox();
+
+            // Store the ALSA metadata for later usage
+            flag->cardIndex = newIndex;
+            flag->controlIndex = i;
+
+            connect(flag, SIGNAL(toggled(bool)), this, SLOT(flagStateChanged(bool)));
             flag->setText(newCard.controls[i].label);
             flag->setChecked(newCard.controls[i].flag.isSelected);
             currentControl->addWidget(flag);
@@ -99,4 +119,25 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
         }
         ui->cardControlAreaLayout->addLayout(currentControl);
     }
+}
+
+void AlsaTunerGUI::selectorSelectionChanged(int newIndex)
+{
+    SelectorComboBox *selector = (SelectorComboBox *) sender();
+    cards[selector->cardIndex].controls[selector->controlIndex].selector.selectedIndex = newIndex;
+    AlsaAPI::updateControl(cards[selector->cardIndex], cards[selector->cardIndex].controls[selector->controlIndex]);
+}
+
+void AlsaTunerGUI::flagStateChanged(bool newState)
+{
+    SelectorCheckBox *flag = (SelectorCheckBox *) sender();
+    cards[flag->cardIndex].controls[flag->controlIndex].flag.isSelected = newState;
+    AlsaAPI::updateControl(cards[flag->cardIndex], cards[flag->cardIndex].controls[flag->controlIndex]);
+}
+
+void AlsaTunerGUI::sliderValueChanged(int newValue)
+{
+    SelectorSlider *slider = (SelectorSlider *) sender();
+    cards[slider->cardIndex].controls[slider->controlIndex].slider.values[slider->valueIndex] = newValue;
+    AlsaAPI::updateControl(cards[slider->cardIndex], cards[slider->cardIndex].controls[slider->controlIndex]);
 }

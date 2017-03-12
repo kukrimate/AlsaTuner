@@ -10,7 +10,13 @@ typedef enum {
     FLAG
 } AlsaControlType;
 
+typedef enum {
+    INT,
+    INT64
+} AlsaSliderType;
+
 typedef struct {
+    AlsaSliderType sliderType;
     long long min;
     long long max;
     QList<long long> values;
@@ -48,6 +54,7 @@ class AlsaAPI
 {
 public:
     static QList<AlsaCard> listSoundCards();
+    static void updateControl(AlsaCard card, AlsaControl control);
 };
 
 #endif // ALSAAPI_H

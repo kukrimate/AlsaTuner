@@ -67,6 +67,7 @@ static AlsaCard getCardInfo(QString path)
 
         case SNDRV_CTL_ELEM_TYPE_INTEGER: // NOTE: the step property of slider controls IS unused
             currentControl.type = SLIDER;
+            currentControl.slider.sliderType = INT;
             currentControl.slider.min = elemInfo.value.integer.min;
             currentControl.slider.max = elemInfo.value.integer.max;
             for (int i = 0; i < elemInfo.count; ++i) {
@@ -75,6 +76,7 @@ static AlsaCard getCardInfo(QString path)
             break;
         case SNDRV_CTL_ELEM_TYPE_INTEGER64:
             currentControl.type = SLIDER;
+            currentControl.slider.sliderType = INT64;
             currentControl.slider.min = elemInfo.value.integer64.min;
             currentControl.slider.max = elemInfo.value.integer64.max;
             for (int i = 0; i < elemInfo.count; ++i) {
@@ -108,6 +110,30 @@ static AlsaCard getCardInfo(QString path)
 
     close(cardFd);
     return card;
+}
+
+void AlsaAPI::updateControl(AlsaCard card, AlsaControl control)
+{
+    int cardFd;
+    struct snd_ctl_elem_value elemValue;
+
+    cardFd = open(QString("/dev/snd/controlC" + QString::number(card.cardId)).toUtf8().data(), O_RDWR);
+    if (cardFd == -1)
+        throw QString("Error opening sound card control device: " + QString::fromUtf8(strerror(errno)));
+
+    elemValue.id.numid = control.controlId;
+    switch (control.type) {
+    case SLIDER:
+        switch (control.slider.sliderType) {
+        case INT:
+            break;
+        case INT64:
+            break;
+        }
+        break;
+    }
+
+    close(cardFd);
 }
 
 QList<AlsaCard> AlsaAPI::listSoundCards()
