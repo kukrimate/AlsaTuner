@@ -46,9 +46,6 @@ static AlsaCard getCardInfo(QString path)
         if (ioctl(cardFd, SNDRV_CTL_IOCTL_ELEM_INFO, &elemInfo) == -1)
             throw QString("Error getting sound card control info: " + QString::fromUtf8(strerror(errno)));
 
-        if (elemInfo.access & SNDRV_CTL_ELEM_ACCESS_READWRITE != SNDRV_CTL_ELEM_ACCESS_READWRITE) // Skip non-writable element
-            continue;
-
         currentControl.controlId = elemInfo.id.numid;
         currentControl.label = QString::fromUtf8((const char *) elemInfo.id.name);
 
@@ -121,17 +118,35 @@ void AlsaAPI::updateControl(AlsaCard card, AlsaControl control)
     if (cardFd == -1)
         throw QString("Error opening sound card control device: " + QString::fromUtf8(strerror(errno)));
 
+
     elemValue.id.numid = control.controlId;
     switch (control.type) {
     case SLIDER:
         switch (control.slider.sliderType) {
         case INT:
+            for (int i = 0; i < control.slider.values.length(); ++i) {
+                qDebug() << control.slider.values.at(i);
+                elemValue.value.integer.value[i] = control.slider.values.at(i);
+            }
             break;
         case INT64:
+            for (int i = 0; i < control.slider.values.length(); ++i) {
+                qDebug() << control.slider.values.at(i);
+                elemValue.value.integer64.value[i] = control.slider.values.at(i);
+            }
             break;
         }
         break;
+    case SELECTOR:
+        elemValue.value.enumerated.item[0] = control.selector.selectedIndex;
+        break;
+    case FLAG:
+        elemValue.value.integer.value[0] = (long) control.flag.isSelected;
+        break;
     }
+
+    if (ioctl(cardFd, SNDRV_CTL_IOCTL_ELEM_WRITE, &elemValue) == -1)
+        throw QString("Error writing to sound card control: " + QString::fromUtf8(strerror(errno)));
 
     close(cardFd);
 }

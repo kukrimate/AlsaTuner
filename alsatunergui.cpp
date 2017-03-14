@@ -3,6 +3,9 @@
 
 #include <QDebug>
 
+#include <QMessageBox>
+#include <QApplication>
+
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
@@ -77,10 +80,12 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
                 slider->controlIndex = i;
                 slider->valueIndex = j;
 
-                connect(slider, SIGNAL(sliderMoved(int)), this, SLOT(sliderValueChanged(int)));
-                slider->setMinimum(newCard.controls[i].slider.min);
-                slider->setMaximum(newCard.controls[i].slider.max);
+                // Fake all sliders to 0 to 100 and scale in software
+                slider->setMinimum(0);
+                slider->setMaximum(100);
+
                 slider->setValue(newCard.controls[i].slider.values[j]);
+                connect(slider, SIGNAL(sliderMoved(int)), this, SLOT(sliderValueChanged(int)));
                 sliderLayout->addWidget(slider);
             }
             currentControl->addLayout(sliderLayout);
@@ -97,9 +102,9 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
             selector->cardIndex = newIndex;
             selector->controlIndex = i;
 
-            connect(selector, SIGNAL(currentIndexChanged(int)), this, SLOT(selectorSelectionChanged(int)));
             selector->addItems(newCard.controls[i].selector.options);
             selector->setCurrentIndex(newCard.controls[i].selector.selectedIndex);
+            connect(selector, SIGNAL(currentIndexChanged(int)), this, SLOT(selectorSelectionChanged(int)));
             currentControl->addWidget(selector);
 
             break;
@@ -110,9 +115,9 @@ void AlsaTunerGUI::selectedCardChanged(int newIndex)
             flag->cardIndex = newIndex;
             flag->controlIndex = i;
 
-            connect(flag, SIGNAL(toggled(bool)), this, SLOT(flagStateChanged(bool)));
             flag->setText(newCard.controls[i].label);
             flag->setChecked(newCard.controls[i].flag.isSelected);
+            connect(flag, SIGNAL(toggled(bool)), this, SLOT(flagStateChanged(bool)));
             currentControl->addWidget(flag);
 
             break;
@@ -125,19 +130,37 @@ void AlsaTunerGUI::selectorSelectionChanged(int newIndex)
 {
     SelectorComboBox *selector = (SelectorComboBox *) sender();
     cards[selector->cardIndex].controls[selector->controlIndex].selector.selectedIndex = newIndex;
-    AlsaAPI::updateControl(cards[selector->cardIndex], cards[selector->cardIndex].controls[selector->controlIndex]);
+    try {
+        AlsaAPI::updateControl(cards[selector->cardIndex], cards[selector->cardIndex].controls[selector->controlIndex]);
+    } catch (QString e) {
+        QMessageBox::critical(this, "Error", e);
+        QApplication::exit(1);
+    }
 }
 
 void AlsaTunerGUI::flagStateChanged(bool newState)
 {
     SelectorCheckBox *flag = (SelectorCheckBox *) sender();
     cards[flag->cardIndex].controls[flag->controlIndex].flag.isSelected = newState;
-    AlsaAPI::updateControl(cards[flag->cardIndex], cards[flag->cardIndex].controls[flag->controlIndex]);
+    try {
+        AlsaAPI::updateControl(cards[flag->cardIndex], cards[flag->cardIndex].controls[flag->controlIndex]);
+    } catch (QString e) {
+        QMessageBox::critical(this, "Error", e);
+        QApplication::exit(1);
+    }
 }
 
 void AlsaTunerGUI::sliderValueChanged(int newValue)
 {
     SelectorSlider *slider = (SelectorSlider *) sender();
-    cards[slider->cardIndex].controls[slider->controlIndex].slider.values[slider->valueIndex] = newValue;
-    AlsaAPI::updateControl(cards[slider->cardIndex], cards[slider->cardIndex].controls[slider->controlIndex]);
+    cards[slider->cardIndex].controls[slider->controlIndex].slider.values[slider->valueIndex]
+            = cards[slider->cardIndex].controls[slider->controlIndex].slider.min +
+            ((cards[slider->cardIndex].controls[slider->controlIndex].slider.max -
+            cards[slider->cardIndex].controls[slider->controlIndex].slider.min) * newValue) / 100;
+    try {
+        AlsaAPI::updateControl(cards[slider->cardIndex], cards[slider->cardIndex].controls[slider->controlIndex]);
+    } catch (QString e) {
+        QMessageBox::critical(this, "Error", e);
+        QApplication::exit(1);
+    }
 }
