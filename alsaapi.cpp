@@ -1,9 +1,11 @@
 #include "alsaapi.h"
 
 #include <dirent.h>
+
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+
 #include <sound/asound.h>
 
 #include <QDebug>
@@ -45,6 +47,9 @@ static AlsaCard getCardInfo(QString path)
         elemInfo.id.numid = elemList.pids[i].numid;
         if (ioctl(cardFd, SNDRV_CTL_IOCTL_ELEM_INFO, &elemInfo) == -1)
             throw QString("Error getting sound card control info: " + QString::fromUtf8(strerror(errno)));
+
+        if (elemInfo.id.iface != SNDRV_CTL_ELEM_IFACE_MIXER) // We only care about mixer stuff
+            continue;
 
         currentControl.controlId = elemInfo.id.numid;
         currentControl.label = QString::fromUtf8((const char *) elemInfo.id.name);
@@ -92,15 +97,12 @@ static AlsaCard getCardInfo(QString path)
             currentControl.selector.selectedIndex = elemValue.value.enumerated.item[0];
             break;
 
-        case SNDRV_CTL_ELEM_TYPE_IEC958:
+        default:
+            // Ignore other control types
             continue;
-            //qDebug() << "iec958" << endl;
-            break;
-        case SNDRV_CTL_ELEM_TYPE_BYTES:
-            continue;
-            //qDebug() << "bytes" << endl;
-            break;
         }
+        // Change the name of the digital audio controls to something more user friendly
+        currentControl.label = currentControl.label.replace("IEC958", "S/PDIF");
         card.controls.append(currentControl);
     }
     delete elemList.pids;

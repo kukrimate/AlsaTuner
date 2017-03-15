@@ -134,7 +134,6 @@ void AlsaTunerGUI::selectorSelectionChanged(int newIndex)
         AlsaAPI::updateControl(cards[selector->cardIndex], cards[selector->cardIndex].controls[selector->controlIndex]);
     } catch (QString e) {
         QMessageBox::critical(this, "Error", e);
-        QApplication::exit(1);
     }
 }
 
@@ -146,7 +145,6 @@ void AlsaTunerGUI::flagStateChanged(bool newState)
         AlsaAPI::updateControl(cards[flag->cardIndex], cards[flag->cardIndex].controls[flag->controlIndex]);
     } catch (QString e) {
         QMessageBox::critical(this, "Error", e);
-        QApplication::exit(1);
     }
 }
 
@@ -161,6 +159,5 @@ void AlsaTunerGUI::sliderValueChanged(int newValue)
         AlsaAPI::updateControl(cards[slider->cardIndex], cards[slider->cardIndex].controls[slider->controlIndex]);
     } catch (QString e) {
         QMessageBox::critical(this, "Error", e);
-        QApplication::exit(1);
     }
 }
