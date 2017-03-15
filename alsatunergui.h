@@ -22,6 +22,7 @@ private:
 
 private slots:
     void selectedCardChanged(int newIndex);
+    void selectedControlChanged(int newIndex);
     // Control change slots
     void sliderValueChanged(int newValue);
     void flagStateChanged(bool newState);

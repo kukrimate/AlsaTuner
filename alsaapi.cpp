@@ -68,22 +68,29 @@ static AlsaCard getCardInfo(QString path)
             break;
 
         case SNDRV_CTL_ELEM_TYPE_INTEGER: // NOTE: the step property of slider controls IS unused
-            currentControl.type = SLIDER;
-            currentControl.slider.sliderType = INT;
-            currentControl.slider.min = elemInfo.value.integer.min;
-            currentControl.slider.max = elemInfo.value.integer.max;
-            for (int i = 0; i < elemInfo.count; ++i) {
-                currentControl.slider.values.append(elemValue.value.integer.value[i]);
+            if (elemInfo.value.integer.max - elemInfo.value.integer.min == 1) { // !HACK: convert range 1 sliders into switches
+                currentControl.label = currentControl.label.replace("Volume", "Playback");
+                currentControl.type = FLAG;
+                currentControl.flag.isSelected = elemValue.value.integer.value[0] == elemInfo.value.integer.min ? false : true;
+            } else {
+                currentControl.type = SLIDER;
+                currentControl.slider.sliderType = INT;
+                currentControl.slider.min = elemInfo.value.integer.min;
+                currentControl.slider.max = elemInfo.value.integer.max;
+                for (int i = 0; i < elemInfo.count; ++i) {
+                    currentControl.slider.values.append(elemValue.value.integer.value[i]);
+                }
             }
             break;
         case SNDRV_CTL_ELEM_TYPE_INTEGER64:
+            /* Disable this horrible (mostly) useless int64 hack and it doesn't do anything on 64-bit platforms
             currentControl.type = SLIDER;
             currentControl.slider.sliderType = INT64;
             currentControl.slider.min = elemInfo.value.integer64.min;
             currentControl.slider.max = elemInfo.value.integer64.max;
             for (int i = 0; i < elemInfo.count; ++i) {
                 currentControl.slider.values.append(elemValue.value.integer64.value[i]);
-            }
+            }*/
             break;
 
         case SNDRV_CTL_ELEM_TYPE_ENUMERATED:

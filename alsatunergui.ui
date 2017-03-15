@@ -14,36 +14,67 @@
    <string>Audio Mixer</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="verticalLayout_2">
     <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
+     <layout class="QVBoxLayout" name="verticalLayout">
       <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="text">
+           <string>Select card:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="cardSelector"/>
+        </item>
+       </layout>
       </item>
       <item>
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Select card:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="cardSelector"/>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <spacer name="horizontalSpacer_2">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_2">
+          <property name="text">
+           <string>Select control:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QComboBox" name="controlSelector"/>
+        </item>
+       </layout>
       </item>
      </layout>
     </item>
     <item>
-     <widget class="QScrollArea" name="cardControlArea">
+     <widget class="QScrollArea" name="controlArea">
       <property name="widgetResizable">
        <bool>true</bool>
       </property>
@@ -53,10 +84,10 @@
          <x>0</x>
          <y>0</y>
          <width>380</width>
-         <height>249</height>
+         <height>216</height>
         </rect>
        </property>
-       <layout class="QHBoxLayout" name="cardControlAreaLayout"/>
+       <layout class="QHBoxLayout" name="controlAreaLayout"/>
       </widget>
      </widget>
     </item>
@@ -82,8 +113,25 @@
     </hint>
    </hints>
   </connection>
+  <connection>
+   <sender>controlSelector</sender>
+   <signal>currentIndexChanged(int)</signal>
+   <receiver>AlsaTunerGUI</receiver>
+   <slot>selectedControlChanged(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>345</x>
+     <y>53</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>199</x>
+     <y>149</y>
+    </hint>
+   </hints>
+  </connection>
  </connections>
  <slots>
   <slot>selectedCardChanged(int)</slot>
+  <slot>selectedControlChanged(int)</slot>
  </slots>
 </ui>
