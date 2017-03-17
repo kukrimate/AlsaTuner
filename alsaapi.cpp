@@ -43,13 +43,13 @@ static AlsaCard getCardInfo(QString path)
         struct snd_ctl_elem_value elemValue;
         AlsaControl currentControl;
 
+        if (elemList.pids[i].iface != SNDRV_CTL_ELEM_IFACE_MIXER) // We only care about mixer stuff
+            continue;
+
         // Read the elem info
         elemInfo.id.numid = elemList.pids[i].numid;
         if (ioctl(cardFd, SNDRV_CTL_IOCTL_ELEM_INFO, &elemInfo) == -1)
             throw QString("Error getting sound card control info: " + QString::fromUtf8(strerror(errno)));
-
-        if (elemInfo.id.iface != SNDRV_CTL_ELEM_IFACE_MIXER) // We only care about mixer stuff
-            continue;
 
         currentControl.controlId = elemInfo.id.numid;
         currentControl.label = QString::fromUtf8((const char *) elemInfo.id.name);
